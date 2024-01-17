@@ -1,0 +1,38 @@
+{
+    "version" : 0,
+    "http_host" : {
+        "ip" : "0.0.0.0",
+        "port" : 16699
+    },
+    "values" : [
+        {
+            "name" : "CPU average load",
+            "bash_command" : "cat /proc/loadavg",
+            "output_regex" : "^(\\d{1}.\\d{2})(.|\\r\\n|\\r|\\n)*",
+            "collect_delay_sec" : 1,
+            "collect_count" : 60,
+            "plots" : [
+                {
+                    "type" : "raw"
+                },
+                {
+                    "title" : "Statistic by hour",
+                    "type" : "statistic", 
+                    "chunk_size" : 60, 
+                    "chunks_count" : 24},
+                {
+                    "title" : "Statistic by day",
+                    "type" : "statistic", 
+                    "chunk_size" : 1440, 
+                    "chunks_count" : 7}
+            ]
+        },
+        {
+            "name" : "CPU temperature",
+            "bash_command" : "sensors -j | jq '.\"k10temp-pci-00c3\".\"Tctl\".\"temp1_input\"' | cat",
+            "output_regex" : "",
+            "collect_delay_sec" : 60,
+            "collect_count" : 60
+        }
+    ]
+}
