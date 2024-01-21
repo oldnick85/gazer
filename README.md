@@ -11,3 +11,5 @@ The list of commands, as well as the types of graphs displayed, are specified in
 For the program to work, you must pass the path to the settings file as an argument.
 
 All scripts must be executed from the project root directory.
+
+![Example web page with plots](docs/page_example_1.png)
