@@ -17,6 +17,8 @@ Collector::~Collector()
 void Collector::InitData()
 {
     auto cnf = config();
+    size_t i = 0;
+    const auto now = std::chrono::steady_clock::now();
     for (const auto& v : cnf->Get().values)
     {
         Value value;
@@ -29,6 +31,8 @@ void Collector::InitData()
         }
         spdlog::info("[{}] add value {}", TAG, value.name);
         m_data->values.push_back(value);
+        m_times.emplace(now, i);
+        i++;
     }
 }
 
@@ -50,18 +54,26 @@ void Collector::Thread()
     while (not m_stop_thread)
     {
         spdlog::trace("[{}] {}", TAG, __FUNCTION__);
-        const auto now = std::chrono::steady_clock::now();
-        const auto& config_values = config()->Get().values;
-        for (size_t i = 0; i < config_values.size(); ++i)
+
         {
-            auto& config_value = config_values[i];
-            auto& value = m_data->values[i];
-            const auto d_sec = std::chrono::duration_cast<std::chrono::seconds>(now - value.last_proc).count();
-            if (d_sec < config_value.collect_delay_sec)
-                continue;
-            CollectValue(value, config_value);
+            const auto now = std::chrono::steady_clock::now();
+            auto it = m_times.begin();
+            while (it->first <= now)
+            {
+                const auto i = it->second;
+                auto& config_value = config()->Get().values[i];
+                auto& value = m_data->values[i];
+                const auto tm = it->first + std::chrono::seconds(config_value.collect_delay_sec);
+                CollectValue(value, config_value);
+                m_times.emplace(tm, i);
+                it = m_times.erase(it);
+            }
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(ACTOR_CYCLE_MS));
+
+        const auto now = std::chrono::steady_clock::now();
+        assert(m_times.begin()->first > now);
+        const auto d = m_times.begin()->first - now;
+        std::this_thread::sleep_for(d);
     }
     spdlog::trace("[{}] {} end", TAG, __FUNCTION__);
 }

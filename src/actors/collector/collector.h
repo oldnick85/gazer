@@ -24,4 +24,5 @@ private:
 private:
     DataPtr             m_data;
     std::atomic_bool    m_stop_thread{false};
+    std::multimap<std::chrono::steady_clock::time_point, size_t>  m_times;
 };

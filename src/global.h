@@ -8,10 +8,6 @@
 
 #include "logging.h"
 
-constexpr bool DEBUG_MODE = false;
-constexpr bool DEBUG_LOGS = DEBUG_MODE;
-constexpr uint ACTOR_CYCLE_MS = (DEBUG_MODE) ? 1000 : 100;
-
 class CApplication;
 std::shared_ptr<CApplication> app();
 class Configuration;
