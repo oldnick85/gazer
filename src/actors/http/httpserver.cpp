@@ -110,15 +110,17 @@ std::string Server::PlotPseudoRaw(const Value& value)
 std::string Server::PlotPseudo(const std::vector<float>& values, std::vector<std::chrono::time_point<std::chrono::system_clock>> times, const std::string caption)
 {
     std::string s = "";
-    const auto [min, max] = std::minmax_element(values.begin(), values.end());
-    const auto d = (max == min) ? 1.0 : *max - *min;
+    const auto [min_e, max_e] = std::minmax_element(values.begin(), values.end());
+    const auto min = *min_e;
+    const auto max = *max_e;
+    const auto d = (max == min) ? 1.0 : max - min;
     s += "<p>";
     s += caption + "<br>\n";
-    s += "max=" + std::to_string(*max) + "<br>\n";
+    s += "max=" + std::to_string(max) + "<br>\n";
     auto time_it = times.begin();
     for (const auto v : values)
     {
-        uint n = round((v - *min)*7/d) + 1;
+        uint n = round((v - min)*7/d) + 1;
         const auto in_time_t = std::chrono::system_clock::to_time_t(*time_it);
         std::stringstream ss;
         ss << std::put_time(std::localtime(&in_time_t), "%Y-%m-%dT%H:%M:%S%z");
@@ -127,7 +129,7 @@ std::string Server::PlotPseudo(const std::vector<float>& values, std::vector<std
         s += "</abbr>";
         time_it++;
     }
-    s += "<br>\nmin=" + std::to_string(*min);
+    s += "<br>\nmin=" + std::to_string(min);
     s += "</p>\n";
     return s;
 }
