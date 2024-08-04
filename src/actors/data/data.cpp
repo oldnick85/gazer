@@ -7,7 +7,4 @@ Data::Data()
     spdlog::info("[{}] {}", TAG, __FUNCTION__);
 }
 
-Data::~Data()
-{
-
-}
+Data::~Data() {}

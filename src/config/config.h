@@ -1,23 +1,23 @@
 #pragma once
 
-#include "appconfig.h"
-
 #include <string>
+
+#include "appconfig.h"
 
 class Configuration
 {
     static inline const std::string TAG = "CNFG";
-    
-public:
+
+  public:
     Configuration(const std::string &path);
 
     const sConfig &Get() const { return m_config; }
     bool Valid() const { return m_valid; }
 
-private:
+  private:
     bool Parse(const std::string &path);
 
-private:
+  private:
     sConfig m_config;
     bool m_valid = false;
 };

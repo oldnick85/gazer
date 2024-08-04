@@ -1,68 +1,70 @@
 #include "config.h"
 
-#include "global.h"
+#include <fstream>
 
 #include "nlohmann/json.hpp"
 
-#include <fstream>
+#include "global.h"
 
-Configuration::Configuration(const std::string &path)
+Configuration::Configuration(const std::string& path)
 {
     Parse(path);
 }
 
-bool Configuration::Parse(const std::string &path)
+bool Configuration::Parse(const std::string& path)
 {
+    spdlog::error("!");
     m_valid = false;
     std::ifstream file(path);
-    if(file.is_open() == false) 
+    if (file.is_open() == false)
     {
         spdlog::error("[{}] File {} open error!", TAG, path);
         return false;
     }
-    try
-    {
-        auto j = nlohmann::json::parse(file);
-        if (j.contains("http_host"))
-        {
-            const auto http_host = j.at("http_host");
-            m_config.http_host.ip = http_host.value("ip", "localhost");
-            m_config.http_host.port = http_host.value("port", 16699);
-        }
-        if (j.contains("values"))
-        {
-            const auto values = j.at("values");
-            for (const auto& v : values)
-            {
-                sConfig::sValue value;
-                value.name = v.value("name", "");
-                value.bash_command = v.value("bash_command", "");
-                value.output_regex = v.value("output_regex", "");
-                value.collect_delay_sec = v.value("collect_delay_sec", 1);
-                value.collect_count = v.value("collect_count", 1);
-                if (v.contains("plots"))
-                {
-                    const auto plots = v.at("plots");
-                    for (const auto& p : plots)
-                    {
-                        sConfig::sValue::sPlot plot;
-                        plot.title = p.value("title", "");
-                        plot.type = p.value("type", "raw");
-                        plot.chunk_size = p.value("chunk_size", 0);
-                        plot.chunks_count = p.value("chunks_count", 0);
-                        value.plots.push_back(plot);
-                    }
-                }
-                m_config.values.push_back(value);
-            }
-        }
-    }
-    catch(const std::exception& e)
+
+    auto jroot = nlohmann::json::parse(file, nullptr, false);
+    if (jroot.is_discarded())
     {
         spdlog::error("[{}] File {} parse error!", TAG, path);
         file.close();
         return false;
     }
+
+    if (jroot.contains("http_host"))
+    {
+        const auto jhttp_host       = jroot.at("http_host");
+        m_config.http_host.ip       = jhttp_host.value("ip", "localhost");
+        constexpr uint default_port = 16699;
+        m_config.http_host.port     = jhttp_host.value("port", default_port);
+    }
+    if (jroot.contains("values"))
+    {
+        const auto jvalues = jroot.at("values");
+        for (const auto& jvalue : jvalues)
+        {
+            sConfig::sValue value;
+            value.name              = jvalue.value("name", "");
+            value.bash_command      = jvalue.value("bash_command", "");
+            value.output_regex      = jvalue.value("output_regex", "");
+            value.collect_delay_sec = jvalue.value("collect_delay_sec", 1);
+            value.collect_count     = jvalue.value("collect_count", 1);
+            if (jvalue.contains("plots"))
+            {
+                const auto& jplots = jvalue.at("plots");
+                for (const auto& jplot : jplots)
+                {
+                    sConfig::sValue::sPlot plot;
+                    plot.title        = jplot.value("title", "");
+                    plot.type         = jplot.value("type", "raw");
+                    plot.chunk_size   = jplot.value("chunk_size", 0);
+                    plot.chunks_count = jplot.value("chunks_count", 0);
+                    value.plots.push_back(plot);
+                }
+            }
+            m_config.values.push_back(value);
+        }
+    }
+
     spdlog::debug("[{}] File {} parse OK!", TAG, path);
     file.close();
     m_valid = true;

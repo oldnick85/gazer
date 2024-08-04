@@ -5,10 +5,9 @@
 
 #include "common/logging.h"
 
-struct sHistorySample
-{
-    std::chrono::time_point<std::chrono::system_clock>  system_time;
-    std::chrono::time_point<std::chrono::steady_clock>  timepoint;
+struct sHistorySample {
+    std::chrono::time_point<std::chrono::system_clock> system_time;
+    std::chrono::time_point<std::chrono::steady_clock> timepoint;
     float value;
 };
 
@@ -16,9 +15,8 @@ using History_t = std::list<sHistorySample>;
 
 class Chunk
 {
-public:
-    Chunk(size_t size) 
-    : m_size(size) 
+  public:
+    Chunk(size_t size) : m_size(size)
     {
         m_values.reserve(m_size);
         m_time = std::chrono::system_clock::now();
@@ -35,21 +33,19 @@ public:
             m_values.clear();
     }
 
-    bool Full() const
-    {
-        return m_full;
-    }
+    bool Full() const { return m_full; }
 
     float Min() const { return m_min; }
     float Max() const { return m_max; }
     float Mean() const { return m_mean; }
 
     std::chrono::time_point<std::chrono::system_clock> Time() const { return m_time; }
-private:
+
+  private:
     void Calc()
     {
-        float min = INFINITY;
-        float max = -INFINITY;
+        float min  = INFINITY;
+        float max  = -INFINITY;
         float mean = 0.0;
         for (const auto v : m_values)
         {
@@ -60,29 +56,27 @@ private:
             mean += v;
         }
         mean /= m_values.size();
-        m_min = min;
-        m_max = max;
+        m_min  = min;
+        m_max  = max;
         m_mean = mean;
     }
-private:
-    size_t  m_size = 0;
-    std::vector<float>  m_values;
-    float   m_min = 0.0;
-    float   m_max = 0.0;
-    float   m_mean = 0.0;
-    bool    m_full = false;
+
+  private:
+    size_t m_size = 0;
+    std::vector<float> m_values;
+    float m_min  = 0.0;
+    float m_max  = 0.0;
+    float m_mean = 0.0;
+    bool m_full  = false;
     std::chrono::time_point<std::chrono::system_clock> m_time;
 };
 
 class Plot
 {
-public:
-    Plot(std::string title, std::string type, size_t chunk_size, size_t chunks_count) 
-        : m_title(title)
-        , m_type(type)
-        , m_chunk_size(chunk_size)
-        , m_chunks_count(chunks_count) 
-        {}
+  public:
+    Plot(std::string title, std::string type, size_t chunk_size, size_t chunks_count)
+        : m_title(title), m_type(type), m_chunk_size(chunk_size), m_chunks_count(chunks_count)
+    {}
 
     void AddValue(float v)
     {
@@ -91,37 +85,37 @@ public:
             Chunk chunk(m_chunk_size);
             m_chunks.push_back(chunk);
         }
-        
+
         m_chunks.back().AddValue(v);
 
         if (m_chunks.size() > m_chunks_count)
             m_chunks.pop_front();
     }
 
-    std::list<Chunk> GetChunks() const {return m_chunks;}
+    std::list<Chunk> GetChunks() const { return m_chunks; }
 
-    std::string Type() const {return m_type;}
-    std::string Title() const {return m_title;}
+    std::string Type() const { return m_type; }
+    std::string Title() const { return m_title; }
 
-private:
-    std::string         m_title;
-    std::string         m_type;
-    size_t              m_chunk_size = 0;
-    size_t              m_chunks_count = 0;
-    std::list<Chunk>    m_chunks;
+  private:
+    std::string m_title;
+    std::string m_type;
+    size_t m_chunk_size   = 0;
+    size_t m_chunks_count = 0;
+    std::list<Chunk> m_chunks;
 };
 
 class Value
 {
-public:
+  public:
     Value() = default;
 
     Value(const Value& other)
     {
-        name = other.name;
+        name    = other.name;
         history = other.history;
-        regex = other.regex;
-        plots = other.plots;
+        regex   = other.regex;
+        plots   = other.plots;
     }
 
     History_t CopyHistory() const
@@ -137,10 +131,11 @@ public:
     }
 
     std::string name;
-    std::chrono::time_point<std::chrono::steady_clock>  last_proc;
+    std::chrono::time_point<std::chrono::steady_clock> last_proc;
     std::regex regex;
     std::vector<Plot> plots;
-private:
+
+  private:
     mutable std::mutex mtx;
     History_t history;
 };
@@ -148,12 +143,13 @@ private:
 class Data
 {
     static inline const std::string TAG = "DATA";
-public:
+
+  public:
     Data();
     ~Data();
 
     std::vector<Value> values;
-private:
 
+  private:
 };
 using DataPtr = std::shared_ptr<Data>;
